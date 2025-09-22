@@ -14,39 +14,23 @@ JSON Schema:
 <JSON Schema>
 {
   "user_request": "string",
-  "sources": [
-    {
-      "name": "string",                    // human-friendly label (e.g. shopify_sales_api)
-      "type": "api|db|file",
-      "technology": "string",                    // e.g., shopify, postgres, mysql, s3, google_sheets
-      "resource": {
-        "endpoint_or_table": "string|null",      // e.g., /admin/api/2024-07/orders.json or public.sales
-        "query_or_filter": "string|null",        // e.g., created_at>={{ds}}-1d
-        "format": "json|csv|parquet|avro|ndjson|null",
-        "incremental_key": "string|null",        // e.g., updated_at, id
-        "primary_keys": ["string"]
-      }
-    }
-  ],
-
-  "destinations": [
-    {
-      "name": "string",                      // e.g., analytics.daily_sales
-      "technology": "postgres|s3|file",
-      "type": "api|db|file"
-    }
-  ],
-
+  "source": {
+    "type": "api|db|file",
+    "endpoint_or_table": "string|null",      // e.g., /admin/api/2024-07/orders.json or public.sales | if not provided, fill null
+    "query_or_filter": "string|null"         // e.g., created_at>={{ds}}-1d | if not provided, fill null
+  },
+  "destination": {
+    "type": "api|db|file",
+    "path": "string|null"         // e.g., C:/folder or /adming/orders or public.sales | if not provided, fill null
+  },
   "transformations": [
     {
-      "step_id": "string",
-      "language": "sql|python|pandas|dbt_sql|spark_sql|pyspark|none",
+      "step_number": 1,      // The number of step
+      "language": "sql|python|pandas",
       "operation": "clean_nulls|cast|dedupe|filter|join|aggregate|derive|rename|normalize|custom",
-      "details": { "key": "value" },            // precise params (e.g., columns, expressions)
-      "inputs": ["string"],                      // upstream step_ids or source names
-      "outputs": ["string"]                      // downstream step_ids or destination targets
+      "target": ["name", "id"]       // precise params (e.g., columns, expressions)
     }
   ],
-  "confidence": 0.0                              // 0-1 overall parse confidence
+  "confidence": 0        // 0-1 overall parse confidence
 }
 </JSON Schema>
