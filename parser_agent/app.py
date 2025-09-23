@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
+from parser_agent import parse_request
 
 app = Flask(__name__)
 
 @app.route('/parse', methods=['POST'])
-def parse_request():
+def parse_endpoint():
     """
     Endpoint that receives a JSON body with 'req' field
     """
@@ -21,11 +22,14 @@ def parse_request():
         # Extract the 'req' value
         req_value = data['req']
         
-        # Process the request (you can add your parsing logic here)
+        # Process the request using the parser agent
+        parsed_result = parse_request(req_value)
+        
+        # Return the parsed result from the parser agent
         response_data = {
             'status': 'success',
-            'received_request': req_value,
-            'message': f'Successfully received request: {req_value}'
+            'original_request': req_value,
+            'parsed_result': parsed_result
         }
         
         return jsonify(response_data), 200
