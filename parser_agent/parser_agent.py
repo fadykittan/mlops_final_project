@@ -41,7 +41,7 @@ def parse_request(request: str) -> dict:
         )
 
         # Read system prompt from file
-        system_prompt_path = os.path.join(os.path.dirname(__file__), 'sysyem_prompt.txt')
+        system_prompt_path = os.path.join(os.path.dirname(__file__), 'system_prompt.txt')
         with open(system_prompt_path, 'r') as f:
             system_prompt = f.read()
 
