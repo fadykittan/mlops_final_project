@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import os
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -44,21 +45,9 @@ def parse_request(request: str) -> dict:
         with open(system_prompt_path, 'r') as f:
             system_prompt = f.read()
 
-        # Create custom format instructions to avoid template variable conflicts
-        format_instructions = """The output should be a valid JSON object with the following structure:
-{{
-    "user_request": "string - The original user request",
-    "source": "object - Source configuration with type, endpoint_or_table, and query_or_filter",
-    "destination": "object - Destination configuration with type and path", 
-    "transformations": "array - List of transformation steps with step_number, language, operation, and target",
-    "confidence": "number - Overall parse confidence score from 0-1"
-}}
-
-Return ONLY the JSON object, no additional text or markdown formatting."""
-
-        # Create a simple prompt without template variables in system message
+        # Create a simple prompt using the system prompt from file
         prompt = ChatPromptTemplate.from_messages([
-            ("system", f"You are the Request Parser Agent for FlowForge's DataOps Assistant. Your job is to convert a natural-language request into a structured ETL pipeline specification in strict JSON.\n\n{format_instructions}"),
+            ("system", system_prompt),
             ("human", "Parse this request into detailed requirements: {request}")
         ])
         
@@ -70,7 +59,7 @@ Return ONLY the JSON object, no additional text or markdown formatting."""
         
         print("--------------------------------")
         print("Parsed Requirements:")
-        print(result)
+        print(json.dumps(result, indent=2))
         print("--------------------------------")
         
         return result
