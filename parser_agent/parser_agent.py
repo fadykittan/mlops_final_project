@@ -3,11 +3,24 @@ import os
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate
+from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 
 # Load environment variables from config.env file
 load_dotenv(os.path.join(os.path.dirname(__file__), 'config.env'))
 
-def parse_request(request: str) -> str:
+# Define response schemas for structured output matching the system prompt
+response_schemas = [
+    ResponseSchema(name="user_request", description="The original user request"),
+    ResponseSchema(name="source", description="Source configuration with type, endpoint_or_table, and query_or_filter"),
+    ResponseSchema(name="destination", description="Destination configuration with type and path"),
+    ResponseSchema(name="transformations", description="List of transformation steps with step_number, language, operation, and target"),
+    ResponseSchema(name="confidence", description="Overall parse confidence score from 0-1")
+]
+
+# Create the output parser
+output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+
+def parse_request(request: str) -> dict:
     """
     Parse a request using Google Gemini AI to extract detailed requirements.
     
@@ -15,11 +28,10 @@ def parse_request(request: str) -> str:
         request (str): The input request to parse
     
     Returns:
-        str
+        dict: Structured output with parsed requirements
     """
     try:
         # Initialize Google Gemini model
-        # Note: Set GOOGLE_API_KEY environment variable
         model = ChatGoogleGenerativeAI(
             model="gemini-1.5-flash",
             temperature=0.1,
@@ -32,30 +44,36 @@ def parse_request(request: str) -> str:
         with open(system_prompt_path, 'r') as f:
             system_prompt = f.read()
 
-        # Escape curly braces in the system prompt to prevent template variable interpretation
-        system_prompt_escaped = system_prompt.replace('{', '{{').replace('}', '}}')
+        # Create custom format instructions to avoid template variable conflicts
+        format_instructions = """The output should be a valid JSON object with the following structure:
+{{
+    "user_request": "string - The original user request",
+    "source": "object - Source configuration with type, endpoint_or_table, and query_or_filter",
+    "destination": "object - Destination configuration with type and path", 
+    "transformations": "array - List of transformation steps with step_number, language, operation, and target",
+    "confidence": "number - Overall parse confidence score from 0-1"
+}}
 
-        # Create prompt template - placeholder for custom prompt
+Return ONLY the JSON object, no additional text or markdown formatting."""
+
+        # Create a simple prompt without template variables in system message
         prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt_escaped),
+            ("system", f"You are the Request Parser Agent for FlowForge's DataOps Assistant. Your job is to convert a natural-language request into a structured ETL pipeline specification in strict JSON.\n\n{format_instructions}"),
             ("human", "Parse this request into detailed requirements: {request}")
         ])
         
-        # Execute the parsing directly with the LLM
-        result = model.invoke(
-            prompt.format_messages(request=request)
-        )
+        # Create the chain: prompt | model | parser
+        chain = prompt | model | output_parser
+        
+        # Execute the parsing
+        result = chain.invoke({"request": request})
         
         print("--------------------------------")
-        # return {
-        #     "status": "success",
-        #     "original_request": request,
-        #     "parsed_requirements": result.content,
-        #     "timestamp": datetime.now().isoformat(),
-        #     "model_used": "gemini-1.5-flash"
-        # }
-        print(result.content)
-        return result.content
+        print("Parsed Requirements:")
+        print(result)
+        print("--------------------------------")
+        
+        return result
         
     except Exception as e:
         return {
@@ -69,7 +87,7 @@ def parse_request(request: str) -> str:
 if __name__ == "__main__":
     # Demo request for testing
     sample_request = """
-    Create an ETL pipeline to pull daily sales data from the Shopify API, clean null customer IDs, and load it into Postgres with a daily_sales table.
+    Create an ETL pipeline to pull daily sales data from the Shopify API, the endpoint is google.com/api/v1/sales, clean null customer IDs, and load it into Postgres with a daily_sales table.
     """
     
     # Create parser instance and parse the request
