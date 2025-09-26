@@ -131,6 +131,21 @@ if __name__ == "__main__":
         ],
         "confidence": 0.8
     }
+
+    sample_pipeline_spec = {
+        "user_request": "Create an ETL pipeline to read data from local file called in.txt, and load it another file called out.txt",
+        "source": {
+            "type": "file",
+            "endpoint_or_table": "in.txt",
+            "query_or_filter": "null"
+        },
+        "destination": {
+            "type": "file",
+            "path": "out.txt"
+        },
+        "transformations": [],
+        "confidence": 0.95
+    }
     
     # Create generator instance and generate the pipeline
     result = generate_pipeline(sample_pipeline_spec)

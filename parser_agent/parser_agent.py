@@ -75,8 +75,12 @@ def parse_request(request: str) -> dict:
 
 if __name__ == "__main__":
     # Demo request for testing
+    # sample_request = """
+    # Create an ETL pipeline to pull daily sales data from the Shopify API, the endpoint is google.com/api/v1/sales, clean null customer IDs, and load it into Postgres with a daily_sales table.
+    # """
+
     sample_request = """
-    Create an ETL pipeline to pull daily sales data from the Shopify API, the endpoint is google.com/api/v1/sales, clean null customer IDs, and load it into Postgres with a daily_sales table.
+    Create an ETL pipeline to read data from local file called in.txt, and load it another file called out.txt
     """
     
     # Create parser instance and parse the request
