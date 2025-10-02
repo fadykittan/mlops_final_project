@@ -34,7 +34,7 @@ def parse_request(request: str) -> dict:
     try:
         # Initialize Google Gemini model
         model = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             temperature=0.1,
             convert_system_message_to_human=True,
             google_api_key=os.getenv("GOOGLE_API_KEY")
@@ -75,8 +75,12 @@ def parse_request(request: str) -> dict:
 
 if __name__ == "__main__":
     # Demo request for testing
+    # sample_request = """
+    # Create an ETL pipeline to pull daily sales data from the Shopify API, the endpoint is google.com/api/v1/sales, clean null customer IDs, and load it into Postgres with a daily_sales table.
+    # """
+
     sample_request = """
-    Create an ETL pipeline to pull daily sales data from the Shopify API, the endpoint is google.com/api/v1/sales, clean null customer IDs, and load it into Postgres with a daily_sales table.
+    Create an ETL pipeline to read data from local file called in.txt, and load it another file called out.txt
     """
     
     # Create parser instance and parse the request
