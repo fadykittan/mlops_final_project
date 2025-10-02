@@ -6,7 +6,8 @@ Return ONLY the complete Python code for the Airflow DAG. Do not wrap it in JSON
 
 1. **Complete and executable** - Ready to save as a .py file and run in Airflow
 2. **Self-contained** - Include all necessary imports and configurations
-3. **Production-ready** - Include proper error handling, logging, and best practices
+3. **Simple and clean** - Write code as simply as possible while maintaining functionality
+4. **Minimal complexity** - Avoid unnecessary abstractions, use straightforward logic
 
 The Airflow DAG code must include:
 - All necessary imports (pandas, requests, psycopg2, airflow operators, etc.)
@@ -15,12 +16,13 @@ The Airflow DAG code must include:
 - Transform tasks (data cleaning, validation, processing)
 - Load task (writing to destination)
 - Task dependencies using >> operator
-- Comprehensive error handling and logging
+- Basic error handling and logging (keep it simple)
 - Connection configurations using Airflow connections
-- Proper Python code formatting and comments
+- Clean Python code formatting and minimal comments
 - Realistic connection IDs and table schemas
-- Data validation and type checking
 - Use PythonVirtualenvOperator for all Python tasks to manage dependencies at the script level
+
+Keep the code simple and readable - avoid over-engineering or complex patterns.
 
 Example structure:
 ```python
