@@ -20,15 +20,14 @@ The Airflow DAG code must include:
 - Proper Python code formatting and comments
 - Realistic connection IDs and table schemas
 - Data validation and type checking
+- Use PythonVirtualenvOperator for all Python tasks to manage dependencies at the script level
 
 Example structure:
 ```python
 from datetime import datetime, timedelta
 import logging
-import pandas as pd
-import requests
 from airflow import DAG
-from airflow.operators.python import PythonOperator
+from airflow.operators.python import PythonVirtualenvOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.hooks.postgres_hook import PostgresHook
 
@@ -42,6 +41,14 @@ default_args = {{
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }}
+
+# Example task using PythonVirtualenvOperator
+extract_task = PythonVirtualenvOperator(
+    task_id="extract_data",
+    python_callable=extract_function,
+    requirements=["pandas", "requests", "psycopg2-binary"],
+    system_site_packages=False
+)
 
 # Your complete DAG implementation here...
 ```

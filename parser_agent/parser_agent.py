@@ -34,7 +34,7 @@ def parse_request(request: str) -> dict:
     try:
         # Initialize Google Gemini model
         model = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             temperature=0.1,
             convert_system_message_to_human=True,
             google_api_key=os.getenv("GOOGLE_API_KEY")
