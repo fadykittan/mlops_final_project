@@ -23,9 +23,13 @@ def run_flow(req):
         integration = IntegrationAgent()
         result = integration.generate_and_validate_pipeline(parsed_result)
         
-        # 4. Return success/failure based on result
+        # 4. Save the generated DAG to file
         if result["success"]:
-            return {"status": "success"}
+            try:
+                saved_file_path = integration.save_final_dag(result["dag_code"])
+                return {"status": "success", "saved_file": saved_file_path}
+            except Exception as save_error:
+                return {"status": "failed", "error": f"Pipeline generated but failed to save: {str(save_error)}"}
         else:
             return {"status": "failed", "error": result.get("message", "Pipeline generation failed")}
     
