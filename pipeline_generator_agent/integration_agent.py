@@ -1,6 +1,6 @@
 import os
-from pipeline_generator_agent import generate_pipeline
-from judge_agent import JudgeAgent
+from pipeline_generator_agent.pipeline_generator_agent import generate_pipeline
+from pipeline_generator_agent.judge_agent import JudgeAgent
 
 class IntegrationAgent:
     def __init__(self):
