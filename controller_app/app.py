@@ -12,9 +12,9 @@ def flow_endpoint():
             return jsonify({'error': 'Missing required field: req'}), 400
         
         req_value = data['req']
-        run_flow(req_value)
+        result = run_flow(req_value)
         
-        return jsonify({'status': 'success'}), 200
+        return jsonify(result), 200 if result["status"] == "success" else 500
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
