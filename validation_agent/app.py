@@ -2,6 +2,8 @@
 """
 Test script for the DAG Validator.
 Demonstrates how to use the DAGValidator class to validate generated Airflow DAGs.
+
+** This app file is for testing only **
 """
 
 from dag_validator import DAGValidator
