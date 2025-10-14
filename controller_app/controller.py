@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from parser_agent.parser_agent import parse_request
 from pipeline_generator_agent.integration_agent import IntegrationAgent
 from validation_agent.dag_validator import DAGValidator
+from deployment_agent.deployment_agent import DeploymentAgent
 
 def run_flow(req):
     """
@@ -47,10 +48,14 @@ def run_flow(req):
                 "validation_details": validation_result
             }
         
-        # 8. Return success with validation info
+        # 8. Deploy to Airflow
+        deployment_agent = DeploymentAgent()
+        deployment_agent.deploy_file(os.path.basename(saved_file_path), "move")
+        
+        # 9. Return success with validation info
         response = {
-            "status": "success", 
-            "saved_file": saved_file_path,
+            "status": "success",
+            "saved_file": deployment_agent.get_deployed_path(os.path.basename(saved_file_path)),
             "validation": {
                 "success": validation_result["success"],
                 "warnings": validation_result.get("warnings", [])
