@@ -52,6 +52,10 @@ class DeploymentAgent:
         
         print(f"Deployed {len(deployed_files)} DAG files using {operation}")
         return deployed_files
+    
+    def get_deployed_path(self, filename):
+        """Get the full path where a file would be deployed."""
+        return str(self.target_dir / filename)
 
 
 if __name__ == "__main__":
