@@ -22,37 +22,98 @@ The Airflow DAG code must include:
 - Realistic connection IDs and table schemas
 - Use PythonVirtualenvOperator for all Python tasks to manage dependencies at the script level
 
+CRITICAL RULES for PythonVirtualenvOperator:
+1. Functions run in isolated processes - they CANNOT access module-level globals
+2. ALL data must be passed via op_args parameter (file paths, constants, config values)
+3. Import logging INSIDE each function: `import logging; logger = logging.getLogger(__name__)`
+4. Use task.output in op_args to pass data between tasks via XCom
+5. Define constants at DAG level, but ALWAYS pass them as function parameters
+
 Keep the code simple and readable - avoid over-engineering or complex patterns.
 
-Example structure:
+Example structure (CORRECT pattern):
 ```python
 from datetime import datetime, timedelta
-import logging
 from airflow import DAG
 from airflow.operators.python import PythonVirtualenvOperator
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.hooks.postgres_hook import PostgresHook
 
-# DAG configuration
+# Use absolute paths in real deployments
+INPUT_FILE_PATH = "/opt/airflow/dags/in.txt"
+OUTPUT_FILE_PATH = "/opt/airflow/dags/out.txt"
+
+def _extract_data_from_file(input_path: str):
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        with open(input_path, "r") as f:
+            data = f.read()
+        logger.info("Successfully extracted data from %s", input_path)
+        return data                      # returned value -> XCom
+    except Exception as e:
+        logger.exception("Error during data extraction")
+        raise
+
+def _transform_data(raw_data: str):
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("Performing data transformation (pass-through).")
+    return raw_data
+
+def _load_data_to_file(transformed_data: str, output_path: str):
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        with open(output_path, "w") as f:
+            f.write(transformed_data)
+        logger.info("Successfully loaded data to %s", output_path)
+        return True
+    except Exception:
+        logger.exception("Error during data loading")
+        raise
+
 default_args = {{
-    'owner': 'data_team',
-    'depends_on_past': False,
-    'start_date': datetime(2024, 1, 1),
-    'email_on_failure': True,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+    "owner": "data_team",
+    "depends_on_past": False,
+    "start_date": datetime(2024, 1, 1),
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 1,
 }}
 
-# Example task using PythonVirtualenvOperator
-extract_task = PythonVirtualenvOperator(
-    task_id="extract_data",
-    python_callable=extract_function,
-    requirements=["pandas", "requests", "psycopg2-binary"],
-    system_site_packages=False
-)
+with DAG(
+    dag_id="file_to_file_etl_pipeline_new",
+    default_args=default_args,
+    description="An ETL pipeline to read from a local file and write to another local file.",
+    schedule_interval=timedelta(days=1),
+    catchup=False,
+    tags=["file_etl", "local"],
+) as dag:
 
-# Your complete DAG implementation here...
+    extract_task = PythonVirtualenvOperator(
+        task_id="extract_data",
+        python_callable=_extract_data_from_file,
+        op_args=[INPUT_FILE_PATH],    # pass in explicitly
+        requirements=[],              # pandas not needed here
+        system_site_packages=False,
+    )
+
+    transform_task = PythonVirtualenvOperator(
+        task_id="transform_data",
+        python_callable=_transform_data,
+        op_args=[extract_task.output],  # pull XCom from previous task
+        requirements=[],
+        system_site_packages=False,
+    )
+
+    load_task = PythonVirtualenvOperator(
+        task_id="load_data",
+        python_callable=_load_data_to_file,
+        op_args=[transform_task.output, OUTPUT_FILE_PATH],
+        requirements=[],
+        system_site_packages=False,
+    )
+
+    extract_task >> transform_task >> load_task
 ```
 
 IMPORTANT: Return ONLY the raw Python code without any markdown formatting, code blocks, or explanations. Do not use triple backticks or any markdown syntax. Just the pure Python code that can be directly saved and executed.
